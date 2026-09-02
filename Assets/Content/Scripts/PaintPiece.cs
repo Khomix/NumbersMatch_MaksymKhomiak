@@ -39,6 +39,11 @@ public class PaintPiece : MonoBehaviour
         numberText.enabled = !visible;
     }
 
+    public void SetPlaced()
+    {
+        numberText.enabled = false;
+    }
+
     public void SetTrayVisible()
     {
         meshRenderer.enabled = true;

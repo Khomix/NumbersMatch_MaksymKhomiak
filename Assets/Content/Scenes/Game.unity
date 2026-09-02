@@ -536,6 +536,7 @@ MonoBehaviour:
   _inputSystem: {fileID: 1990990448}
   _gameFeelSettings: {fileID: 11400000, guid: 3c06f07da0255384bac15256c0e8b9bf, type: 2}
   _cinemachineTargetGroup: {fileID: 150541051}
+  _landingEffectPrefab: {fileID: 2368778389612538126, guid: aca75403ba6b2054098d5ec7b5ef32cb, type: 3}
 --- !u!4 &1319768429
 Transform:
   m_ObjectHideFlags: 0

@@ -1,14 +1,17 @@
 using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using LandingEffect;
 using Settings;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public class BoardInteractionManager : IDisposable
 {
     private InputSystem _inputSystem;
     private PixelPaintGrid _pixelPaintGrid;
     private GameFeelSettings _gameFeel;
+    private LandingEffectService _landingEffectService;
 
     private Camera _mainCamera;
     private PaintPiece _currentPiece;
@@ -16,11 +19,12 @@ public class BoardInteractionManager : IDisposable
     private Vector3 _pieceStartPosition;
     private bool _isFlyingBack;
 
-    public void Initialize(InputSystem inputSystem, PixelPaintGrid pixelPaintGrid, GameFeelSettings gameFeel)
+    public void Initialize(InputSystem inputSystem, PixelPaintGrid pixelPaintGrid, GameFeelSettings gameFeel, LandingEffectService landingEffectService)
     {
         _inputSystem = inputSystem;
         _pixelPaintGrid = pixelPaintGrid;
         _gameFeel = gameFeel;
+        _landingEffectService = landingEffectService;
 
         _inputSystem.OnPieceSelected += OnPieceSelected;
         _inputSystem.OnPieceMoved += OnPieceMoved;
@@ -66,14 +70,21 @@ public class BoardInteractionManager : IDisposable
             {
                 targetPiece.IsOccupied = true;
                 _currentPiece.IsPlaced = true;
+                MoveToPosition(targetPiece.transform.position,
+                    () =>
+                    {
+                        PlayBounceScale(_currentPiece.transform, punchAmount: 0.2f, duration: 0.2f);
+                        _landingEffectService.PlayAsync(_currentPiece).Forget();
+                        _currentPiece = null;
+                    }).Forget();
 
-                MoveToPosition(targetPiece.transform.position).Forget();
-                
                 ColorGroupTracker.Instance.OnPiecePlaced(_currentPiece.ColorNumber);
 
-                PlayBounceScale(_currentPiece.transform, punchAmount: 0.2f, duration: 0.3f);
-                
-                _currentPiece = null;
+
+                _currentPiece.SetPlaced();
+
+
+                Object.Destroy(targetPiece.gameObject);
                 return;
             }
         }
@@ -174,18 +185,20 @@ public class BoardInteractionManager : IDisposable
         _isFlyingBack = false;
     }
 
-    private async UniTask MoveToPosition(Vector3 position)
+    private async UniTask MoveToPosition(Vector3 position, Action onComplete)
     {
         if (_currentPiece != null)
         {
             await _currentPiece.transform.DOMove(position, _gameFeel.MoveToPositionDuration)
                 .SetEase(_gameFeel.MoveToPositionEase)
                 .AsyncWaitForCompletion().AsUniTask();
+
+            onComplete?.Invoke();
         }
     }
 
     public void PlayBounceScale(Transform target, float punchAmount = 0.2f, float duration = 0.3f)
     {
-        target.DOPunchScale(Vector3.one * punchAmount, duration, 10, 1f);
+        target.DOPunchScale(Vector3.one * punchAmount, duration, 5, 1f);
     }
 }
