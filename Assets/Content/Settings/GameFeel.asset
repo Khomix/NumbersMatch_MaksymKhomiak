@@ -18,4 +18,4 @@ MonoBehaviour:
   MoveToPositionDuration: 0.15
   MoveToPositionEase: 1
   MoveBackDuration: 0.5
-  MoveBackEase: 27
+  MoveBackEase: 2

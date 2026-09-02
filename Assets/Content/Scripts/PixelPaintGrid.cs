@@ -23,6 +23,7 @@ public class PixelPaintGrid : MonoBehaviour
     private List<PieceColor> _invisibleColorsList = new();
     private readonly List<PaintPiece> _leftoverPieces = new();
     private readonly List<PaintPiece> _boardPieces = new();
+    private readonly Dictionary<int, List<PaintPiece>> _piecesByColor = new();
     private float _boardOffsetZ;
 
     public List<PaintPiece> LeftoverPieces => _leftoverPieces;
@@ -46,17 +47,7 @@ public class PixelPaintGrid : MonoBehaviour
         _pieceSize = settings.PieceSize;
         _colorTolerance = settings.ColorTolerance;
 
-        if (_sourceImage == null)
-        {
-            Debug.LogError("PixelPaintGrid: SourceImage is not set on LevelSettings.");
-            yield break;
-        }
-
-        if (_paintPiece == null)
-        {
-            Debug.LogError("PixelPaintGrid: PiecePrefab is not set on LevelSettings.");
-            yield break;
-        }
+        if (_sourceImage == null || _paintPiece == null) yield break;
 
         GeneratePixelGrid();
 
@@ -92,8 +83,17 @@ public class PixelPaintGrid : MonoBehaviour
                 piece.SetMasked();
                 piece.SetVisible(isPieceVisible);
 
+                if (!_piecesByColor.ContainsKey(closestPieceColor.colorNumber))
+                {
+                    _piecesByColor[closestPieceColor.colorNumber] = new List<PaintPiece>();
+                }
+                _piecesByColor[closestPieceColor.colorNumber].Add(piece);
+
                 if (!isPieceVisible)
+                {
                     _invisibleColorsList.Add(closestPieceColor);
+                    ColorGroupTracker.Instance.RegisterSlot(closestPieceColor.colorNumber);
+                }
 
                 _boardPieces.Add(piece);
             }
@@ -153,6 +153,7 @@ public class PixelPaintGrid : MonoBehaviour
         _invisibleColorsList.Clear();
         _leftoverPieces.Clear();
         _boardPieces.Clear();
+        _piecesByColor.Clear();
         _boardOffsetZ = 0f;
 
         StartCoroutine(Init());
@@ -170,6 +171,17 @@ public class PixelPaintGrid : MonoBehaviour
             bool isVisible = Random.value < LevelSettings.Instance.VisibilityRate;
             SaveVisibilityState(index, isVisible);
             return isVisible;
+        }
+    }
+    public void ReplacePiece(PaintPiece oldPiece, PaintPiece newPiece)
+    {
+        if (_piecesByColor.TryGetValue(oldPiece.ColorNumber, out var list))
+        {
+            int index = list.IndexOf(oldPiece);
+            if (index != -1)
+            {
+                list[index] = newPiece;
+            }
         }
     }
 
@@ -204,6 +216,13 @@ public class PixelPaintGrid : MonoBehaviour
         bounds.SetMinMax(min, max);
 
         return bounds;
+    }
+
+    public List<PaintPiece> GetPiecesByColor(int colorNumber)
+    {
+        if (_piecesByColor.TryGetValue(colorNumber, out var list))
+            return list;
+        return new List<PaintPiece>();
     }
 
     void OnApplicationQuit()

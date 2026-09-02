@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using DG.Tweening;
 
 public class PaintPiece : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class PaintPiece : MonoBehaviour
     [SerializeField] private SpriteRenderer _spriteRendererHighlight;
     [SerializeField] private TextMeshPro numberText;
     [SerializeField] private Renderer meshRenderer;
+    [SerializeField] private ParticleSystem _revealParticles;
 
     public int ColorNumber;
     public Color OriginalColor;
@@ -15,21 +17,30 @@ public class PaintPiece : MonoBehaviour
     public bool IsTrayPiece;
     public bool IsOccupied;
 
-    private Color _currentColor;
+    private MaterialPropertyBlock _propBlock;
+    
+    private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
+    private static readonly int DissolveAmountID = Shader.PropertyToID("_DissolveAmount");
+
+    private void Awake()
+    {
+        _propBlock = new MaterialPropertyBlock();
+    }
 
     public void Init(Color color, int colorNumber)
     {
         OriginalColor = color;
         ColorNumber = colorNumber;
-        _currentColor = color;
-
-        SetColor(color);
         numberText.text = colorNumber.ToString();
-    }
 
-    private void SetColor(Color color)
-    {
-        meshRenderer.material.color = new Color(color.r, color.g, color.b, 1);
+        if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
+
+        meshRenderer.GetPropertyBlock(_propBlock);
+        _propBlock.SetColor(BaseColorID, color);
+        
+        _propBlock.SetFloat(DissolveAmountID, 1f); 
+        meshRenderer.SetPropertyBlock(_propBlock);
+
         spriteRenderer.color = new Color(color.r, color.g, color.b, 0.5f);
     }
 
@@ -46,13 +57,24 @@ public class PaintPiece : MonoBehaviour
 
     public void SetTrayVisible()
     {
+        if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
+
+        meshRenderer.GetPropertyBlock(_propBlock);
+        _propBlock.SetFloat(DissolveAmountID, 1f); 
+        meshRenderer.SetPropertyBlock(_propBlock);
+
         meshRenderer.enabled = true;
         numberText.enabled = true;
     }
 
     public void SetMasked()
     {
-        meshRenderer.material.color = Color.black;
+        if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
+
+        meshRenderer.GetPropertyBlock(_propBlock);
+        _propBlock.SetFloat(DissolveAmountID, 0f); 
+        meshRenderer.SetPropertyBlock(_propBlock);
+
         spriteRenderer.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
         meshRenderer.enabled = true;
         numberText.enabled = true;
@@ -60,24 +82,41 @@ public class PaintPiece : MonoBehaviour
 
     public void SetTemporaryColor(Color color)
     {
-        
         _spriteRendererHighlight.enabled = true;
-        if (meshRenderer != null)
-        {
-            //meshRenderer.material.color = new Color(color.r, color.g, color.b, 1);
-        }
     }
 
     public void ResetColor()
     {
         _spriteRendererHighlight.enabled = false;
-        // if (IsPlaced)
-        // {
-        //     SetColor(OriginalColor);
-        // }
-        // else
-        // {
-        //     SetMasked();
-        // }
+    }
+
+    public void RevealColor(float delay = 0f)
+    {
+        numberText.enabled = false;
+    
+        if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
+        meshRenderer.GetPropertyBlock(_propBlock);
+
+        float dissolveValue = 0f;
+    
+        DOTween.To(() => dissolveValue, x => 
+            {
+                dissolveValue = x;
+                _propBlock.SetFloat(DissolveAmountID, dissolveValue);
+                meshRenderer.SetPropertyBlock(_propBlock);
+            }, 1f, 0.6f)
+            .SetDelay(delay)
+            .SetEase(Ease.OutQuad)
+            .OnStart(() => 
+            {
+                transform.DOPunchScale(Vector3.one * 0.15f, 0.4f, 2, 0.5f);
+        
+                if (_revealParticles)
+                {
+                    var main = _revealParticles.main;
+                    main.startColor = OriginalColor;
+                    _revealParticles.Play();
+                }
+            });
     }
 }
