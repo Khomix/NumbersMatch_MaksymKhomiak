@@ -21,54 +21,50 @@ public class InputSystem : MonoBehaviour
 
     private void Update()
     {
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBGL
-        HandleMouseInput();
-#elif UNITY_IOS || UNITY_ANDROID
-        HandleTouchInput();
-#endif
+        HandleInput();
     }
 
-    private void HandleMouseInput()
+    private void HandleInput()
     {
-        if (Mouse.current == null) return;
-
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (Touchscreen.current != null && Touchscreen.current.touches.Count > 0)
         {
-            TrySelectPiece(mousePos);
+            var touch = Touchscreen.current.touches[0];
+            var phase = touch.phase.ReadValue();
+            Vector2 touchPos = touch.position.ReadValue();
+
+            if (phase == UnityEngine.InputSystem.TouchPhase.Began)
+            {
+                TrySelectPiece(touchPos);
+            }
+            else if (phase == UnityEngine.InputSystem.TouchPhase.Moved && _gameObject != null)
+            {
+                OnMoved(touchPos);
+            }
+            else if ((phase == UnityEngine.InputSystem.TouchPhase.Ended || phase == UnityEngine.InputSystem.TouchPhase.Canceled) && _gameObject != null)
+            {
+                TryRelease();
+            }
+            return;
         }
 
-        if (Mouse.current.leftButton.isPressed && _gameObject != null)
+        if (Mouse.current != null)
         {
-            OnMoved(mousePos);
-        }
+            Vector2 mousePos = Mouse.current.position.ReadValue();
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame && _gameObject != null)
-        {
-            TryRelease();
-        }
-    }
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                TrySelectPiece(mousePos);
+            }
 
-    private void HandleTouchInput()
-    {
-        if (Touchscreen.current == null || Touchscreen.current.touches.Count == 0) return;
+            if (Mouse.current.leftButton.isPressed && _gameObject != null)
+            {
+                OnMoved(mousePos);
+            }
 
-        var touch = Touchscreen.current.touches[0];
-        var phase = touch.phase.ReadValue();
-        Vector2 touchPos = touch.position.ReadValue();
-
-        if (phase == UnityEngine.InputSystem.TouchPhase.Began)
-        {
-            TrySelectPiece(touchPos);
-        }
-        else if (phase == UnityEngine.InputSystem.TouchPhase.Moved && _gameObject != null)
-        {
-            OnMoved(touchPos);
-        }
-        else if (phase == UnityEngine.InputSystem.TouchPhase.Ended && _gameObject != null)
-        {
-            TryRelease();
+            if (Mouse.current.leftButton.wasReleasedThisFrame && _gameObject != null)
+            {
+                TryRelease();
+            }
         }
     }
 
