@@ -50,4 +50,14 @@ public class ColorGroupTracker : MonoBehaviour
             }
         }
     }
+
+    public bool WillCompleteGroup(int colorNumber)
+    {
+        if (_filledSlotsPerColor.TryGetValue(colorNumber, out int filled) &&
+            _totalSlotsPerColor.TryGetValue(colorNumber, out int total))
+        {
+            return filled + 1 >= total;
+        }
+        return false;
+    }
 }

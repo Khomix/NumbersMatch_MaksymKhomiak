@@ -57,6 +57,8 @@ public class PaintPiece : MonoBehaviour
 
     public void SetTrayVisible()
     {
+        IsTrayPiece = true;
+
         if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
 
         meshRenderer.GetPropertyBlock(_propBlock);

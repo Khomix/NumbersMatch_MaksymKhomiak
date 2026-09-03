@@ -48,6 +48,8 @@ public class BoardInteractionManager : IDisposable
     {
         if (TryGetPiece(_inputSystem.SelectedPiece, out PaintPiece piece))
         {
+            if (!piece.IsTrayPiece || piece.IsPlaced) return;
+
             _currentPiece = piece;
             _pieceStartPosition = _currentPiece.transform.position;
             MovePiece(screenPosition);
@@ -78,12 +80,17 @@ public class BoardInteractionManager : IDisposable
 
                 _pixelPaintGrid.ReplacePiece(targetPiece, _currentPiece);
 
+                bool willCompleteGroup = ColorGroupTracker.Instance.WillCompleteGroup(_currentPiece.ColorNumber);
+                PaintPiece pieceToLand = _currentPiece;
+
                 MoveToPosition(targetPiece.transform.position,
                     () =>
                     {
-                        PlayBounceScale(_currentPiece.transform, punchAmount: 0.2f, duration: 0.2f);
-                        _landingEffectService.PlayAsync(_currentPiece).Forget();
-                        _currentPiece = null;
+                        PlayBounceScale(pieceToLand.transform, punchAmount: 0.2f, duration: 0.2f);
+                        if (!willCompleteGroup)
+                        {
+                            _landingEffectService.PlayAsync(pieceToLand).Forget();
+                        }
                     }).Forget();
 
                 _feedbackManager?.Play(FeedbackType.PieceLand);
@@ -93,6 +100,7 @@ public class BoardInteractionManager : IDisposable
                 _currentPiece.SetPlaced();
     
                 Object.Destroy(targetPiece.gameObject);
+                _currentPiece = null;
                 return;
             }
         }
