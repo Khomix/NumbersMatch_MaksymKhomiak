@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FeedbackSettings
   Feedbacks:
   - Type: 0
-    AudioClips: {fileID: 0}
+    AudioClips: {fileID: 8300000, guid: 902d6ab8f41e63549a05ea266354dd87, type: 3}
     UseCameraShake: 1
     ShakeDuration: 0.15
     ShakeAmplitude: 0.8
   - Type: 1
-    AudioClips: {fileID: 0}
+    AudioClips: {fileID: 8300000, guid: 0786bfe4d59ce0248a7e88e99411d0f2, type: 3}
     UseCameraShake: 0
     ShakeDuration: 0.4
     ShakeAmplitude: 2
   - Type: 2
-    AudioClips: {fileID: 0}
+    AudioClips: {fileID: 8300000, guid: c3a4df0d9c6111943a0209803ad1a924, type: 3}
     UseCameraShake: 0
     ShakeDuration: 0.05
     ShakeAmplitude: 0.3

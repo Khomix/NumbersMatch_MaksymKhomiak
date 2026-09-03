@@ -1,3 +1,4 @@
+using Content.Scripts.UI;
 using LandingEffect;
 using Settings;
 using Unity.Cinemachine;
@@ -12,12 +13,14 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private LandingEffectView _landingEffectPrefab;
     [SerializeField] private CinemachineImpulseSource _cinemachineImpulseSource;
     [SerializeField] private FeedbackManager _feedbackManager;
+    [SerializeField] private VictoryWindowView _victoryWindowView;
     
     
     private BoardInteractionManager _boardInteractionManager;
     private CameraSetup _cameraSetup;
     private LandingEffectService _effectService;
     private RevealController _revealController;
+    private VictoryWindowController _victoryWindowController;
 
     private void Awake()
     {
@@ -33,10 +36,12 @@ public class GameBootstrap : MonoBehaviour
     private void Start()
     {
         _revealController = new RevealController(ColorGroupTracker.Instance, _pixelPaintGrid,_feedbackManager);
+        _victoryWindowController = new VictoryWindowController(_victoryWindowView, ColorGroupTracker.Instance);
     }
 
     private void OnDestroy()
     {
+        _victoryWindowController?.Dispose();
         _revealController?.Dispose();
         _boardInteractionManager?.Dispose();
     }
