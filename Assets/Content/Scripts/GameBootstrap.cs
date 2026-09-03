@@ -36,8 +36,8 @@ public class GameBootstrap : MonoBehaviour
 
     private void Start()
     {
-        _revealController = new RevealController(ColorGroupTracker.Instance, _pixelPaintGrid,_feedbackManager);
-        _victoryWindowController = new VictoryWindowController(_victoryWindowView, ColorGroupTracker.Instance);
+        _revealController = new RevealController(ColorGroupTracker.Instance, _pixelPaintGrid, _feedbackManager, _gameFeelSettings);
+        _victoryWindowController = new VictoryWindowController(_victoryWindowView, ColorGroupTracker.Instance, _gameFeelSettings);
     }
 
     private void OnDestroy()

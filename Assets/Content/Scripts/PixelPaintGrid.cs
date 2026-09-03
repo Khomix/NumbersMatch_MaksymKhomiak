@@ -115,7 +115,7 @@ public class PixelPaintGrid : MonoBehaviour
             {
                 foreach (var piece in pair.Value)
                 {
-                    piece.RevealColor(0f);
+                    piece.SetUnmasked();
                 }
             }
         }

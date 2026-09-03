@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using Settings;
 using UnityEngine;
 
 public class RevealController : IDisposable
@@ -8,12 +9,14 @@ public class RevealController : IDisposable
     private readonly ColorGroupTracker _tracker;
     private readonly PixelPaintGrid _grid;
     private readonly FeedbackManager _feedbackManager;
+    private readonly GameFeelSettings _gameFeel;
 
-    public RevealController(ColorGroupTracker tracker, PixelPaintGrid grid, FeedbackManager feedbackManager)
+    public RevealController(ColorGroupTracker tracker, PixelPaintGrid grid, FeedbackManager feedbackManager, GameFeelSettings gameFeel = null)
     {
         _tracker = tracker;
         _grid = grid;
         _feedbackManager = feedbackManager;
+        _gameFeel = gameFeel;
         _tracker.OnGroupRevealed += HandleGroupRevealed;
         _tracker.OnGameCompleted += HandleGameCompleted;
     }
@@ -37,10 +40,12 @@ public class RevealController : IDisposable
             if (dist > maxDistance) maxDistance = dist;
         }
 
+        float delayScale = _gameFeel != null ? _gameFeel.GroupRevealDelayScale : 0.4f;
+
         foreach (var piece in piecesToReveal)
         {
             float dist = Vector3.Distance(groupCenter, piece.transform.position);
-            float delay = maxDistance > 0 ? (dist / maxDistance) * 0.4f : 0f;
+            float delay = maxDistance > 0 ? (dist / maxDistance) * delayScale : 0f;
         
             piece.RevealColor(delay);
         }
@@ -61,7 +66,10 @@ public class RevealController : IDisposable
         float totalDiagLength = diagVector.magnitude;
         Vector3 diagDir = totalDiagLength > 0.001f ? diagVector.normalized : Vector3.forward;
 
-        float waveDuration = 1.0f;
+        float waveDuration = _gameFeel != null ? _gameFeel.VictoryWaveDuration : 1.0f;
+        float jumpPower = _gameFeel != null ? _gameFeel.VictoryJumpPower : 0.6f;
+        float jumpDuration = _gameFeel != null ? _gameFeel.VictoryJumpDuration : 0.4f;
+        Ease jumpEase = _gameFeel != null ? _gameFeel.VictoryJumpEase : Ease.OutQuad;
 
         foreach (var piece in boardPieces)
         {
@@ -74,9 +82,9 @@ public class RevealController : IDisposable
 
             Vector3 startPos = piece.transform.position;
             piece.transform.DOKill();
-            piece.transform.DOJump(startPos, jumpPower: 0.6f, numJumps: 1, duration: 0.4f)
+            piece.transform.DOJump(startPos, jumpPower: jumpPower, numJumps: 1, duration: jumpDuration)
                 .SetDelay(delay)
-                .SetEase(Ease.OutQuad);
+                .SetEase(jumpEase);
         }
     }
 

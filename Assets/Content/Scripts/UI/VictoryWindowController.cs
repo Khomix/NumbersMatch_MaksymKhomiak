@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using Settings;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,11 +10,13 @@ namespace Content.Scripts.UI
     {
         private readonly VictoryWindowView _view;
         private readonly ColorGroupTracker _tracker;
+        private readonly GameFeelSettings _gameFeel;
 
-        public VictoryWindowController(VictoryWindowView view, ColorGroupTracker tracker)
+        public VictoryWindowController(VictoryWindowView view, ColorGroupTracker tracker, GameFeelSettings gameFeel = null)
         {
             _view = view;
             _tracker = tracker;
+            _gameFeel = gameFeel;
 
             _tracker.OnGameCompleted += HandleGameCompleted;
             _view.OnRestartClicked += HandleRestartClicked;
@@ -21,8 +24,9 @@ namespace Content.Scripts.UI
 
         private void HandleGameCompleted()
         {
-            // Delay window popup by 1.5s so player sees the full diagonal wave animation on the board first
-            DOVirtual.DelayedCall(1.5f, () =>
+            float popupDelay = _gameFeel != null ? _gameFeel.VictoryWindowPopupDelay : 1.5f;
+
+            DOVirtual.DelayedCall(popupDelay, () =>
             {
                 _view.Show();
             });

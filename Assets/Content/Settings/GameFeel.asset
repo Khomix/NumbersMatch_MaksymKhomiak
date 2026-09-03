@@ -19,3 +19,17 @@ MonoBehaviour:
   MoveToPositionEase: 1
   MoveBackDuration: 0.5
   MoveBackEase: 2
+  MagneticSnapStrength: 0.6
+  MagneticRepulsionStrength: 0.2
+  MatchHighlightColor: {r: 0.08495018, g: 0.7830189, b: 0.08495018, a: 1}
+  MismatchHighlightColor: {r: 0.9811321, g: 0.087931626, b: 0.087931626, a: 1}
+  NeutralHighlightColor: {r: 0.85, g: 0.85, b: 0.85, a: 1}
+  GroupRevealDelayScale: 0.4
+  RevealDissolveDuration: 0.6
+  RevealDissolveEase: 6
+  VictoryWaveDuration: 1
+  VictoryJumpPower: 0.6
+  VictoryJumpDuration: 0.4
+  VictoryJumpEase: 6
+  VictoryWindowPopupDelay: 1.5
+  VictoryWindowFadeDuration: 0.5

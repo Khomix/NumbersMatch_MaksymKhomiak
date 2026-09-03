@@ -16,6 +16,9 @@ public class PaintPiece : MonoBehaviour
     public bool IsPlaced;
     public bool IsTrayPiece;
     public bool IsOccupied;
+    public bool IsInitiallyVisible;
+
+    public bool CanAcceptPiece => !IsInitiallyVisible && !IsOccupied && !IsPlaced && !IsTrayPiece;
 
     private MaterialPropertyBlock _propBlock;
     
@@ -46,6 +49,7 @@ public class PaintPiece : MonoBehaviour
 
     public void SetVisible(bool visible)
     {
+        IsInitiallyVisible = visible;
         meshRenderer.enabled = visible;
         numberText.enabled = !visible;
     }
@@ -82,14 +86,42 @@ public class PaintPiece : MonoBehaviour
         numberText.enabled = true;
     }
 
+    public void SetUnmasked()
+    {
+        if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
+
+        meshRenderer.GetPropertyBlock(_propBlock);
+        _propBlock.SetFloat(DissolveAmountID, 1f); 
+        meshRenderer.SetPropertyBlock(_propBlock);
+
+        spriteRenderer.color = new Color(OriginalColor.r, OriginalColor.g, OriginalColor.b, 1f);
+        meshRenderer.enabled = true;
+        numberText.enabled = false;
+        IsPlaced = true;
+        IsOccupied = true;
+        IsInitiallyVisible = true;
+    }
+
     public void SetTemporaryColor(Color color)
     {
-        _spriteRendererHighlight.enabled = true;
+        if (_spriteRendererHighlight != null)
+        {
+            if (color == Color.gray)
+            {
+                color = new Color(0.85f, 0.85f, 0.85f, 1f);
+            }
+
+            _spriteRendererHighlight.color = color;
+            _spriteRendererHighlight.enabled = true;
+        }
     }
 
     public void ResetColor()
     {
-        _spriteRendererHighlight.enabled = false;
+        if (_spriteRendererHighlight != null)
+        {
+            _spriteRendererHighlight.enabled = false;
+        }
     }
 
     public void RevealColor(float delay = 0f)

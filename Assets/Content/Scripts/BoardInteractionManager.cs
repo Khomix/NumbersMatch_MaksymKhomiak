@@ -115,6 +115,24 @@ public class BoardInteractionManager : IDisposable
             _mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, _gameFeel.DragZDepth));
         Vector3 targetWithOffset = targetWorldPosition + _gameFeel.DragOffset;
 
+        if (CheckIfCanBePlaced(out PaintPiece targetPiece))
+        {
+            if (targetPiece.ColorNumber == _currentPiece.ColorNumber && !targetPiece.IsOccupied)
+            {
+                // Magnetic Snap: Pull smoothly towards target slot position
+                float snapStrength = _gameFeel.MagneticSnapStrength;
+                Vector3 targetSlotPos = new Vector3(targetPiece.transform.position.x, targetWithOffset.y, targetPiece.transform.position.z);
+                targetWithOffset = Vector3.Lerp(targetWithOffset, targetSlotPos, snapStrength);
+            }
+            else
+            {
+                // Magnetic Repulsion: Push slightly away from wrong slot
+                Vector3 repulsionDir = (targetWithOffset - targetPiece.transform.position).normalized;
+                repulsionDir.y = 0f;
+                targetWithOffset += repulsionDir * _gameFeel.MagneticRepulsionStrength;
+            }
+        }
+
         _currentPiece.transform.position = Vector3.Lerp(
             _currentPiece.transform.position,
             targetWithOffset,
@@ -124,19 +142,55 @@ public class BoardInteractionManager : IDisposable
 
     private void UpdateHoverEffect()
     {
-        if (CheckIfCanBePlaced(out PaintPiece targetPiece))
+        if (TryGetBoardPieceUnderRay(out PaintPiece pieceUnderRay))
         {
-            if (_hoveredPiece != targetPiece)
+            if (_hoveredPiece != pieceUnderRay)
             {
                 ClearHoverEffect();
-                _hoveredPiece = targetPiece;
-                _hoveredPiece.SetTemporaryColor(Color.black);
+                _hoveredPiece = pieceUnderRay;
+
+                if (_hoveredPiece.CanAcceptPiece)
+                {
+                    if (_hoveredPiece.ColorNumber == _currentPiece.ColorNumber)
+                    {
+                        _hoveredPiece.SetTemporaryColor(_gameFeel.MatchHighlightColor);
+                    }
+                    else
+                    {
+                        _hoveredPiece.SetTemporaryColor(_gameFeel.MismatchHighlightColor);
+                    }
+                }
+                else
+                {
+                    _hoveredPiece.SetTemporaryColor(_gameFeel.NeutralHighlightColor);
+                }
             }
         }
         else
         {
             ClearHoverEffect();
         }
+    }
+
+    private bool TryGetBoardPieceUnderRay(out PaintPiece piece)
+    {
+        Ray ray = new Ray(_currentPiece.transform.position, Vector3.down);
+        RaycastHit[] hits = Physics.RaycastAll(ray);
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider.gameObject != _currentPiece.gameObject)
+            {
+                piece = hit.collider.GetComponentInParent<PaintPiece>();
+                if (piece != null && piece != _currentPiece)
+                {
+                    return true;
+                }
+            }
+        }
+
+        piece = null;
+        return false;
     }
 
     private void ClearHoverEffect()
@@ -157,9 +211,13 @@ public class BoardInteractionManager : IDisposable
         {
             if (hit.collider.gameObject != _currentPiece.gameObject)
             {
-                if (hit.collider.TryGetComponent(out targetPiece))
+                targetPiece = hit.collider.GetComponentInParent<PaintPiece>();
+                if (targetPiece != null && targetPiece != _currentPiece)
                 {
-                    return true;
+                    if (targetPiece.CanAcceptPiece)
+                    {
+                        return true;
+                    }
                 }
             }
         }
