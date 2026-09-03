@@ -65,7 +65,7 @@ public class BoardInteractionManager : IDisposable
         UpdateHoverEffect();
     }
 
-    private void OnPieceDropped()
+    private async void OnPieceDropped()
     {
         if (_currentPiece == null) return;
 
@@ -82,25 +82,24 @@ public class BoardInteractionManager : IDisposable
 
                 bool willCompleteGroup = ColorGroupTracker.Instance.WillCompleteGroup(_currentPiece.ColorNumber);
                 PaintPiece pieceToLand = _currentPiece;
+                _currentPiece = null;
 
-                MoveToPosition(targetPiece.transform.position,
-                    () =>
-                    {
-                        PlayBounceScale(pieceToLand.transform, punchAmount: 0.2f, duration: 0.2f);
-                        if (!willCompleteGroup)
-                        {
-                            _landingEffectService.PlayAsync(pieceToLand).Forget();
-                        }
-                    }).Forget();
+                await pieceToLand.transform.DOMove(targetPiece.transform.position, _gameFeel.MoveToPositionDuration)
+                    .SetEase(_gameFeel.MoveToPositionEase)
+                    .AsyncWaitForCompletion().AsUniTask();
+
+                if (!willCompleteGroup)
+                {
+                    PlayBounceScale(pieceToLand.transform, punchAmount: 0.2f, duration: 0.2f);
+                    _landingEffectService.PlayAsync(pieceToLand).Forget();
+                }
 
                 _feedbackManager?.Play(FeedbackType.PieceLand);
 
-                ColorGroupTracker.Instance.OnPiecePlaced(_currentPiece.ColorNumber);
-
-                _currentPiece.SetPlaced();
-    
+                pieceToLand.SetPlaced();
                 Object.Destroy(targetPiece.gameObject);
-                _currentPiece = null;
+
+                ColorGroupTracker.Instance.OnPiecePlaced(pieceToLand.ColorNumber);
                 return;
             }
         }

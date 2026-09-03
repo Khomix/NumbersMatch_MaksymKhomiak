@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,7 +21,11 @@ namespace Content.Scripts.UI
 
         private void HandleGameCompleted()
         {
-            _view.Show();
+            // Delay window popup by 1.5s so player sees the full diagonal wave animation on the board first
+            DOVirtual.DelayedCall(1.5f, () =>
+            {
+                _view.Show();
+            });
         }
 
         private void HandleRestartClicked()

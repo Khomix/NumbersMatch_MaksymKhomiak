@@ -10,6 +10,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private InputSystem _inputSystem;
     [SerializeField] private GameFeelSettings _gameFeelSettings;
     [SerializeField] private CinemachineTargetGroup _cinemachineTargetGroup;
+    [SerializeField] private CinemachineCamera _cinemachineCamera;
     [SerializeField] private LandingEffectView _landingEffectPrefab;
     [SerializeField] private CinemachineImpulseSource _cinemachineImpulseSource;
     [SerializeField] private FeedbackManager _feedbackManager;
@@ -30,7 +31,7 @@ public class GameBootstrap : MonoBehaviour
         _effectService = new LandingEffectService(_landingEffectPrefab, transform);
         
         _boardInteractionManager.Initialize(_inputSystem, _pixelPaintGrid, _gameFeelSettings, _effectService,_feedbackManager);
-        _cameraSetup.Initialize(_cinemachineTargetGroup, _pixelPaintGrid);
+        _cameraSetup.Initialize(_cinemachineTargetGroup, _cinemachineCamera, _pixelPaintGrid);
     }
 
     private void Start()

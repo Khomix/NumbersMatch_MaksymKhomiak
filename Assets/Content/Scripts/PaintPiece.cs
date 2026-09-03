@@ -99,7 +99,13 @@ public class PaintPiece : MonoBehaviour
         if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
         meshRenderer.GetPropertyBlock(_propBlock);
 
-        float dissolveValue = 0f;
+        float currentDissolve = _propBlock.GetFloat(DissolveAmountID);
+        if (Mathf.Approximately(currentDissolve, 1f) || IsPlaced)
+        {
+            return;
+        }
+
+        float dissolveValue = currentDissolve;
     
         DOTween.To(() => dissolveValue, x => 
             {
